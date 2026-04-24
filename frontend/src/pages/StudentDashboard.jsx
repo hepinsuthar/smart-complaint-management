@@ -7,6 +7,7 @@ import {
   User as UserIcon, Key, History, Funnel, Eye
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import config from '../config/config';
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -54,7 +55,7 @@ export default function StudentDashboard() {
 
     const fetchComplaints = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/complaints', {
+        const res = await fetch(`${config.BASE_URL}/api/complaints`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -116,7 +117,7 @@ export default function StudentDashboard() {
 
     const fetchNotifications = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/notifications", {
+        const res = await fetch(`${config.BASE_URL}/api/notifications`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -139,7 +140,7 @@ export default function StudentDashboard() {
 if (token && user?._id) {
   fetchNotifications();
 
-  socket = socketIO("http://localhost:5000", {
+  socket = socketIO(`${config.BASE_URL.replace('/api', '')}`, {
     transports: ["websocket"]
   });
 
@@ -219,7 +220,7 @@ if (token && user?._id) {
     files.forEach(file => formData.append('files', file));
 
     try {
-      const res = await fetch('http://localhost:5000/api/complaints', {
+      const res = await fetch(`${config.BASE_URL}/api/complaints`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -242,7 +243,7 @@ if (token && user?._id) {
       setFiles([]); 
 
       // Refetch complaints to show new one
-      const fetchRes = await fetch('http://localhost:5000/api/complaints', {
+      const fetchRes = await fetch(`${config.BASE_URL}/api/complaints`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const newData = await fetchRes.json();
@@ -272,7 +273,7 @@ if (token && user?._id) {
     }
   };
 
-  const openFile = (path) => window.open(`http://localhost:5000${path}`, '_blank');
+  const openFile = (path) => window.open(`${config.BASE_URL}${path}`, '_blank');
 
   const handleLogout = () => {
     sessionStorage.clear();
@@ -300,7 +301,7 @@ if (token && user?._id) {
   }
 
   try {
-    const res = await fetch("http://localhost:5000/api/auth/change-password", {
+    const res = await fetch(`${config.BASE_URL}/api/auth/change-password`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

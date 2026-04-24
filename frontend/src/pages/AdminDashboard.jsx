@@ -5,6 +5,7 @@ import {
   Users, ChevronRight, AlertCircle, Clock, CheckCircle, Loader2, Funnel
 } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis } from 'recharts';
+import config from '../config/config';
 
 const COLORS = ['#06B6D4', '#3B82F6', '#F59E0B', '#10B981', '#8B5CF6'];
 
@@ -40,7 +41,7 @@ export default function AdminDashboard() {
       setError('');
 
       try {
-        const res = await fetch('http://localhost:5000/api/complaints/all', {
+        const res = await fetch(`${config.BASE_URL}/api/complaints/all`, {
           headers: { 'Authorization': `Bearer ${token}` },
           credentials: 'include'
         });
@@ -95,7 +96,7 @@ export default function AdminDashboard() {
 
     const fetchNotifications = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/notifications", {
+        const res = await fetch(`${config.BASE_URL}/api/notifications`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -115,7 +116,7 @@ export default function AdminDashboard() {
     if (token) {
       fetchNotifications();
       const user = JSON.parse(sessionStorage.getItem('user') || '{}');
-      socket = socketIO("http://localhost:5000", { transports: ["websocket"] });
+      socket = socketIO(`${config.BASE_URL.replace('/api', '')}`, { transports: ["websocket"] });
       socket.emit("join", user._id);
       socket.on("notification", (n) => {
         // prepend new notification
@@ -167,7 +168,7 @@ export default function AdminDashboard() {
 
   const updateStatus = async () => {
   try {
-    const res = await fetch(`http://localhost:5000/api/complaints/${selectedComplaint.id}`, {
+    const res = await fetch(`${config.BASE_URL}/api/complaints/${selectedComplaint.id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -544,7 +545,7 @@ export default function AdminDashboard() {
                                         {c.files.map((file, i) => (
                                           <a
                                             key={i}
-                                            href={`http://localhost:5000/${file.replace(/^\/+/, '')}`}
+                                            href={`${config.BASE_URL}/${file.replace(/^\/+/, '')}`}
                                             target="_blank"
                                             rel="noreferrer"
                                             className="px-3 py-1 bg-gray-800 rounded text-xs text-cyan-300 hover:text-white"

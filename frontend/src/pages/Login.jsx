@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Hash, Mail, Lock, Eye, EyeOff, ArrowLeft, X } from 'lucide-react';
+import config from '../config/config';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -36,10 +37,10 @@ export default function Login() {
       let endpoint, body;
 
       if (isAdminMode) {
-        endpoint = 'http://localhost:5000/api/auth/admin-login';
+        endpoint = `${config.BASE_URL}/api/auth/admin-login`;
         body = { email: identifier.toLowerCase(), password };
       } else {
-        endpoint = 'http://localhost:5000/api/auth/student-login';
+        endpoint = `${config.BASE_URL}/api/auth/student-login`;
         body = { prn: identifier.trim(), password };
       }
 
@@ -101,7 +102,7 @@ export default function Login() {
 
     try {
       // First, login temporarily to get token
-      const loginRes = await fetch('http://localhost:5000/api/auth/student-login', {
+      const loginRes = await fetch(`${config.BASE_URL}/api/auth/student-login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prn: changePwdPrn.trim(), password: currentPassword })
@@ -116,7 +117,7 @@ export default function Login() {
       const loginData = await loginRes.json();
 
       // Now change password
-      const changeRes = await fetch("http://localhost:5000/api/auth/change-password", {
+      const changeRes = await fetch(`${config.BASE_URL}/api/auth/change-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

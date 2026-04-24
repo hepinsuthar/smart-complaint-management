@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, Hash, CheckCircle } from 'lucide-react';
+import config from '../config/config';
 
 export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
@@ -43,7 +44,7 @@ export default function Signup() {
     const data = { name, prn, email, password };
 
     try {
-      const res = await fetch('http://localhost:5000/api/auth/signup', {
+      const res = await fetch(`${config.BASE_URL}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
