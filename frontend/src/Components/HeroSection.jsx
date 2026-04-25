@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import React from 'react';
+import heroImg from '../assets/images/hero.png';
 
 export default function HeroSection() {
   return (
@@ -36,7 +37,7 @@ export default function HeroSection() {
           <div className="hidden lg:block">
             <div className="flex justify-center items-center h-full">
               <motion.img
-                src="../../src/assets/images/hero.png"
+                src={heroImg}
                 alt="Smart Complaint Management Illustration"
                 className="w-full max-w-xl h-auto object-contain drop-shadow-2xl"
                 animate={{ y: [0, -20, 0] }}
