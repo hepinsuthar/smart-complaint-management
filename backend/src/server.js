@@ -28,8 +28,8 @@ app.use("/api/complaints", require("./routes/complaintRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
 
-const complaintRoutes = require("./routes/complaintRoutes");
-app.use("/api/complaints", complaintRoutes);
+// const complaintRoutes = require("./routes/complaintRoutes");
+// app.use("/api/complaints", complaintRoutes);
 
 
 const server = http.createServer(app);

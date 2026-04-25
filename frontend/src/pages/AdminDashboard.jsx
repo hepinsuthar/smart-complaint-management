@@ -41,7 +41,7 @@ export default function AdminDashboard() {
       setError('');
 
       try {
-        const res = await fetch(`${config.BASE_URL}/api/complaints/all`, {
+        const res = await fetch(`${config.BASE_URL}/api/complaints`, {
           headers: { 'Authorization': `Bearer ${token}` },
           credentials: 'include'
         });
