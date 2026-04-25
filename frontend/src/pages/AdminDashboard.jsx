@@ -41,50 +41,47 @@ export default function AdminDashboard() {
       setError('');
 
       try {
-        const res = await fetch(`${config.BASE_URL}/api/complaints`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-          credentials: 'include'
+        const res = await fetch(`${config.BASE_URL}/api/complaints/all`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         });
 
         if (!res.ok) throw new Error('Failed to fetch complaints');
-
-        const complaints = await res.json();
-        const studentMap = {};
-
-        complaints.forEach(c => {
-          const s = c.studentId;
-          if (!s) return;
-
-          if (!studentMap[s._id]) {
-            studentMap[s._id] = {
-              id: s._id,
-              studentId: s._id,
-              name: s.name,
-              prn: s.prn,
-              email: s.email,
+        const data = await res.json();
+        console.log('API Response:', data);
+        
+        // Transform flat complaints into grouped by student
+        const grouped = {};
+        data.forEach(complaint => {
+          const student = complaint.studentId;
+          if (!grouped[student._id]) {
+            grouped[student._id] = {
+              id: student._id,
+              name: student.name,
+              email: student.email,
+              prn: student.prn,
               complaints: []
             };
           }
-          studentMap[s._id].complaints.push({
-            id: c._id,
-            displayId: c.complaintId || `CMP-${c._id.toString().slice(-8).toUpperCase()}`,
-            title: c.title || c.complaintTitle || 'No title',
-            category: c.category || 'N/A',
-            description: c.description || c.desc || 'No description',
-            priority: c.priority || 'Low',
-            status: c.status || 'Pending',
-            adminComment: c.adminComment || '',
-            date: c.createdAt
-              ? new Date(c.createdAt).toLocaleDateString()
-              : 'N/A',
-            files: (c.files || []).map(f => {
-              const path = typeof f === 'string' ? f : f.url;
-              return path?.replace(/\\/g, '/'); // Windows → web path
-            })
+          grouped[student._id].complaints.push({
+            id: complaint._id,
+            displayId: complaint.complaintId,
+            title: complaint.title,
+            category: complaint.category,
+            description: complaint.description,
+            priority: complaint.priority,
+            status: complaint.status,
+            date: new Date(complaint.createdAt).toLocaleDateString(),
+            files: complaint.attachments || [],
+            adminComment: complaint.adminComment || ''
           });
         });
-
-        setStudentsData(Object.values(studentMap));
+        
+        setStudentsData(Object.values(grouped));
+        setError('');
       } catch (err) {
         setError(err.message || 'Server error loading complaints');
       } finally {
@@ -115,13 +112,12 @@ export default function AdminDashboard() {
     let socket;
     if (token) {
       fetchNotifications();
-      const user = JSON.parse(sessionStorage.getItem('user') || '{}');
-      socket = socketIO(`${config.BASE_URL.replace('/api', '')}`, { transports: ["websocket"] });
-      socket.emit("join", user._id);
-      socket.on("notification", (n) => {
-        // prepend new notification
-        setNotifications(prev => [n, ...prev]);
-      });
+      // const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+      // socket = socketIO(`${config.BASE_URL}`, { transports: ["websocket"] });
+      // socket.emit("join", user._id);
+      // socket.on("notification", (n) => {
+      //   setNotifications(prev => [n, ...prev]);
+      // });
     }
 
     return () => {
@@ -129,11 +125,11 @@ export default function AdminDashboard() {
     };
   }, [token]);
 
-  const allComplaints = studentsData.flatMap(s => s.complaints);
+  const allComplaints = studentsData.flatMap(s => s.complaints || []);
   const filteredStudents = studentsData
   .map(student => ({
     ...student,
-    complaints: student.complaints.filter(c =>
+    complaints: (student.complaints || []).filter(c =>
       student.name.toLowerCase().includes(search.toLowerCase()) ||
       student.email.toLowerCase().includes(search.toLowerCase()) ||
       c.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -177,8 +173,7 @@ export default function AdminDashboard() {
       body: JSON.stringify({ 
         status: newStatus,
         adminComment: adminComment
-      }),
-      credentials: 'include'
+      })
     });
 
     if (!res.ok) throw new Error('Failed to update');
@@ -359,7 +354,7 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-[#111827] border border-gray-800 rounded-xl p-5 sm:p-6 shadow-lg">
                 <h3 className="text-lg sm:text-xl font-semibold mb-4">Complaints by Category</h3>
-                <div className="h-64">
+                <div className="h-64 min-h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -381,7 +376,7 @@ export default function AdminDashboard() {
               </div>
               <div className="bg-[#111827] border border-gray-800 rounded-xl p-5 sm:p-6 shadow-lg">
                 <h3 className="text-lg sm:text-xl font-semibold mb-4">Complaints by Status</h3>
-                <div className="h-64">
+                <div className="h-64 min-h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={statusChartData}>
                       <XAxis dataKey="name" stroke="#9CA3AF" />
@@ -641,4 +636,4 @@ export default function AdminDashboard() {
     </div>
   
 );
-} 
+}
