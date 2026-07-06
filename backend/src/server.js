@@ -7,8 +7,9 @@ const { setIO } = require("./utils/socket");
 
 require("dotenv").config();
 connectDB();
-const { createDefaultAdmin } = require("./controllers/authController");
+const { createDefaultAdmin, createDefaultFaculty } = require("./controllers/authController");
 createDefaultAdmin();
+createDefaultFaculty();
 
 const app = express();
 
@@ -27,9 +28,6 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/complaints", require("./routes/complaintRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
-
-// const complaintRoutes = require("./routes/complaintRoutes");
-// app.use("/api/complaints", complaintRoutes);
 
 
 const server = http.createServer(app);

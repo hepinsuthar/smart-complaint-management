@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Hash, Mail, Lock, Eye, EyeOff, ArrowLeft, X } from 'lucide-react';
 import config from '../config/config';
-
+import logoUrl from '../assets/images/logo.png';
 export default function Login() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isAdminMode, setIsAdminMode] = useState(false);
+  const [loginMode, setLoginMode] = useState('student');
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [changePwdPrn, setChangePwdPrn] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
@@ -36,8 +36,11 @@ export default function Login() {
     try {
       let endpoint, body;
 
-      if (isAdminMode) {
+      if (loginMode === 'admin') {
         endpoint = `${config.BASE_URL}/api/auth/admin-login`;
+        body = { email: identifier.toLowerCase(), password };
+      } else if (loginMode === 'faculty') {
+        endpoint = `${config.BASE_URL}/api/auth/faculty-login`;
         body = { email: identifier.toLowerCase(), password };
       } else {
         endpoint = `${config.BASE_URL}/api/auth/student-login`;
@@ -64,6 +67,8 @@ export default function Login() {
       // Redirect based on role
       if (data.user.role === 'admin') {
         navigate('/admin-dashboard');
+      } else if (data.user.role === 'faculty') {
+        navigate('/faculty-dashboard');
       } else {
         navigate('/student-dashboard');
       }
@@ -160,11 +165,12 @@ export default function Login() {
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md bg-[#1a2335]/90 backdrop-blur-lg rounded-3xl p-8 shadow-2xl shadow-[#06B6D4]/20 border border-[#06B6D4]/10">
           <div className="flex justify-center mb-5">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1760D7] to-[#06B6D4] flex items-center justify-center shadow-lg">
+            {/* <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1760D7] to-[#06B6D4] flex items-center justify-center shadow-lg">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
-            </div>
+            </div> */}
+            <img src={logoUrl} alt="Logo" className="w-14 h-14 object-contain" />
           </div>
 
           <h2 className="text-3xl font-bold text-white text-center mb-2">
@@ -174,19 +180,26 @@ export default function Login() {
             Login to your Smart Complaint account
           </p>
 
-          {/* Toggle Admin / Student */}
-          <div className="flex justify-center mb-6 gap-4">
+          {/* Toggle Student / Faculty / Admin */}
+          <div className="flex justify-center mb-6 gap-2 flex-wrap">
             <button
               type="button"
-              onClick={() => setIsAdminMode(false)}
-              className={`px-6 py-2 rounded-lg font-medium transition ${!isAdminMode ? 'bg-gradient-to-r from-[#1760D7] to-[#06B6D4] text-white' : 'bg-gray-700 text-gray-300'}`}
+              onClick={() => setLoginMode('student')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${loginMode === 'student' ? 'bg-gradient-to-r from-[#1760D7] to-[#06B6D4] text-white' : 'bg-gray-700 text-gray-300'}`}
             >
               Student
             </button>
             <button
               type="button"
-              onClick={() => setIsAdminMode(true)}
-              className={`px-6 py-2 rounded-lg font-medium transition ${isAdminMode ? 'bg-gradient-to-r from-[#1760D7] to-[#06B6D4] text-white' : 'bg-gray-700 text-gray-300'}`}
+              onClick={() => setLoginMode('faculty')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${loginMode === 'faculty' ? 'bg-gradient-to-r from-[#1760D7] to-[#06B6D4] text-white' : 'bg-gray-700 text-gray-300'}`}
+            >
+              Faculty
+            </button>
+            <button
+              type="button"
+              onClick={() => setLoginMode('admin')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${loginMode === 'admin' ? 'bg-gradient-to-r from-[#1760D7] to-[#06B6D4] text-white' : 'bg-gray-700 text-gray-300'}`}
             >
               Admin
             </button>
@@ -195,19 +208,19 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                {isAdminMode ? 'Email' : 'PRN '}
+                {loginMode === 'student' ? 'PRN' : 'Email'}
               </label>
               <div className="relative">
-                {isAdminMode ? (
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                ) : (
+                {loginMode === 'student' ? (
                   <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                ) : (
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 )}
                 <input
-                  type={isAdminMode ? "email" : "text"}
+                  type={loginMode === 'student' ? "text" : "email"}
                   name="identifier"
                   className="w-full pl-12 pr-4 py-3 bg-[#0f172a] border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:border-[#06B6D4] focus:outline-none transition"
-                  placeholder={isAdminMode ? "Enter Your Email" : "Enter your PRN"}
+                  placeholder={loginMode === 'student' ? "Enter your PRN" : "Enter your email"}
                   required
                 />
               </div>
@@ -252,14 +265,16 @@ export default function Login() {
           </form>
 
           <p className="mt-6 text-center text-slate-400 text-sm">
-            {isAdminMode ? (
-              <>Login as student? <button type="button" onClick={() => setIsAdminMode(false)} className="text-[#06B6D4] font-medium hover:underline">Click here</button></>
+            {loginMode === 'student' ? (
+              <>Faculty or admin login? <button type="button" onClick={() => setLoginMode('faculty')} className="text-[#06B6D4] font-medium hover:underline">Click here</button></>
+            ) : loginMode === 'faculty' ? (
+              <>Student login? <button type="button" onClick={() => setLoginMode('student')} className="text-[#06B6D4] font-medium hover:underline">Click here</button></>
             ) : (
-              <>Admin login? <button type="button" onClick={() => setIsAdminMode(true)} className="text-[#06B6D4] font-medium hover:underline">Click here</button></>
+              <>Student login? <button type="button" onClick={() => setLoginMode('student')} className="text-[#06B6D4] font-medium hover:underline">Click here</button></>
             )}
           </p>
 
-          {!isAdminMode && (
+          {loginMode === 'student' && (
             <>
               <p className="mt-8 text-center text-slate-400 text-sm">
                 Don't have an account?{' '}

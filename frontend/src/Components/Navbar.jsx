@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import logoUrl from '../assets/images/logo.png';
 
 function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -27,7 +28,7 @@ function Navbar() {
       <div className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between">
         {/* Logo */}
         <a href="/" className="flex items-center gap-3 group max-sm:gap-2 max-sm:scale-90">
-          <div
+          {/* <div
             className="w-10 h-10 rounded-xl bg-linear-to-tr from-[#1760D7] to-[#06B6D4] flex items-center justify-center shadow-lg shadow-cyan-500/30 group-hover:scale-110 transition-transform duration-300 max-sm:w-9 max-sm:h-9"
           >
             <svg
@@ -42,7 +43,8 @@ function Navbar() {
             >
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
-          </div>
+          </div> */}
+          <img src={logoUrl} alt="Logo" className="w-10 h-10 object-contain" />
 
           <div className="flex flex-col">
             <span className="font-bold text-white leading-none max-sm:text-sm">

@@ -8,6 +8,7 @@ import Signup from './pages/Signup.jsx'
 
 import StudentDashboard from './pages/StudentDashboard.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
+import FacultyDashboard from './pages/FacultyDashboard.jsx'
 
 function App() {
 
@@ -19,6 +20,7 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/student-dashboard" element={<StudentDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/faculty-dashboard" element={<FacultyDashboard />} />
       </Routes>
     </>
   )

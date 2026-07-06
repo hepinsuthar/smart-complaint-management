@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, Hash, CheckCircle } from 'lucide-react';
 import config from '../config/config';
+import logoUrl from '../assets/images/logo.png';
 
 export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
@@ -72,11 +73,12 @@ export default function Signup() {
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md bg-[#1a2335]/90 backdrop-blur-lg rounded-3xl p-8 shadow-2xl shadow-[#06B6D4]/20 border border-[#06B6D4]/10">
           <div className="flex flex-col items-center mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1760D7] to-[#06B6D4] flex items-center justify-center shadow-lg">
+            {/* <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1760D7] to-[#06B6D4] flex items-center justify-center shadow-lg">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-8 h-8">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
-            </div>
+            </div> */}
+            <img src={logoUrl} alt="Logo" className="w-14 h-14 object-contain" />
           </div>
 
           <h2 className="text-3xl font-bold text-white text-center mb-2">Create Account</h2>

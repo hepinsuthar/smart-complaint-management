@@ -10,9 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.5.1",
     "@tailwindcss/vite": "^4.1.18",
     "chart.js": "^4.5.1",
+    "file-saver": "^2.0.5",
     "framer-motion": "^12.23.26",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",
     "react-chartjs-2": "^5.3.1",
@@ -20,7 +24,8 @@
     "react-router-dom": "^7.11.0",
     "recharts": "^3.6.0",
     "socket.io-client": "^4.8.3",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

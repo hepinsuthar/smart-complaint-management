@@ -32,6 +32,21 @@ const complaintSchema = new mongoose.Schema({
     type: String,
     default: ""
   },
+  facultyId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
+  facultyName: {
+    type: String,
+    default: "",
+  },
+  facultyComment: {
+    type: String,
+    default: "",
+  },
+  assignedAt: Date,
+  resolvedAt: Date,
   category: {
     type: String,
     required: true
@@ -43,7 +58,7 @@ const complaintSchema = new mongoose.Schema({
   files: [String],
   status: {
     type: String,
-    enum: ["Pending", "In Progress", "Resolved", "Rejected"],
+    enum: ["Pending","Assigned", "In Progress", "Resolved", "Rejected"],
     default: "Pending"
   },
 }, { timestamps: true });

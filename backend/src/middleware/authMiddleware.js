@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
-module.exports = (req, res, next) => {
+module.exports = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -11,11 +12,12 @@ module.exports = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id || decoded._id).select("role");
 
-    // 🔥 IMPORTANT
     req.user = {
       _id: decoded.id || decoded._id,
-      role: decoded.role
+      id: decoded.id || decoded._id,
+      role: decoded.role || user?.role || "student",
     };
 
     next();

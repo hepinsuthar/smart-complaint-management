@@ -57,7 +57,26 @@ const studentLogin = async (req, res) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(400).json({ error: "Incorrect password" });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET);
+
+    res.json({ message: "Login success", token, user });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+// ------------------ Faculty Login ------------------
+const facultyLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email, role: "faculty" });
+    if (!user) return res.status(400).json({ error: "Faculty not found" });
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.status(400).json({ error: "Incorrect password" });
+
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET);
 
     res.json({ message: "Login success", token, user });
   } catch (err) {
@@ -76,7 +95,7 @@ const adminLogin = async (req, res) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(400).json({ error: "Incorrect password" });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET);
 
     res.json({ message: "Login success", token, user });
   } catch (err) {
@@ -93,7 +112,7 @@ const createDefaultAdmin = async () => {
       await User.create({
         name: "Admin",
         email: process.env.ADMIN_EMAIL,
-        password: process.env.ADMIN_PASSWORD, // no hashing here
+        password: process.env.ADMIN_PASSWORD,
         role: "admin",
       });
 
@@ -101,6 +120,91 @@ const createDefaultAdmin = async () => {
     }
   } catch (err) {
     console.log("Admin creation error:", err);
+  }
+};
+
+const createDefaultFaculty = async () => {
+  try {
+    const faculties = [
+      {
+        name: process.env.HOSTEL_FACULTY_NAME,
+        email: process.env.HOSTEL_FACULTY_EMAIL,
+        password: process.env.HOSTEL_FACULTY_PASSWORD,
+        department: process.env.HOSTEL_FACULTY_DEPARTMENT,
+        designation: process.env.HOSTEL_FACULTY_DESIGNATION,
+        employeeId: process.env.HOSTEL_FACULTY_EMPLOYEE_ID,
+      },
+      {
+        name: process.env.ACADEMIC_FACULTY_NAME,
+        email: process.env.ACADEMIC_FACULTY_EMAIL,
+        password: process.env.ACADEMIC_FACULTY_PASSWORD,
+        department: process.env.ACADEMIC_FACULTY_DEPARTMENT,
+        designation: process.env.ACADEMIC_FACULTY_DESIGNATION,
+        employeeId: process.env.ACADEMIC_FACULTY_EMPLOYEE_ID,
+      },
+      {
+        name: process.env.IT_FACULTY_NAME,
+        email: process.env.IT_FACULTY_EMAIL,
+        password: process.env.IT_FACULTY_PASSWORD,
+        department: process.env.IT_FACULTY_DEPARTMENT,
+        designation: process.env.IT_FACULTY_DESIGNATION,
+        employeeId: process.env.IT_FACULTY_EMPLOYEE_ID,
+      },
+      {
+        name: process.env.LIBRARY_FACULTY_NAME,
+        email: process.env.LIBRARY_FACULTY_EMAIL,
+        password: process.env.LIBRARY_FACULTY_PASSWORD,
+        department: process.env.LIBRARY_FACULTY_DEPARTMENT,
+        designation: process.env.LIBRARY_FACULTY_DESIGNATION,
+        employeeId: process.env.LIBRARY_FACULTY_EMPLOYEE_ID,
+      },
+      {
+        name: process.env.TRANSPORT_FACULTY_NAME,
+        email: process.env.TRANSPORT_FACULTY_EMAIL,
+        password: process.env.TRANSPORT_FACULTY_PASSWORD,
+        department: process.env.TRANSPORT_FACULTY_DEPARTMENT,
+        designation: process.env.TRANSPORT_FACULTY_DESIGNATION,
+        employeeId: process.env.TRANSPORT_FACULTY_EMPLOYEE_ID,
+      },
+      {
+        name: process.env.MESS_FACULTY_NAME,
+        email: process.env.MESS_FACULTY_EMAIL,
+        password: process.env.MESS_FACULTY_PASSWORD,
+        department: process.env.MESS_FACULTY_DEPARTMENT,
+        designation: process.env.MESS_FACULTY_DESIGNATION,
+        employeeId: process.env.MESS_FACULTY_EMPLOYEE_ID,
+      },
+      {
+        name: process.env.OTHER_FACULTY_NAME,
+        email: process.env.OTHER_FACULTY_EMAIL,
+        password: process.env.OTHER_FACULTY_PASSWORD,
+        department: process.env.OTHER_FACULTY_DEPARTMENT,
+        designation: process.env.OTHER_FACULTY_DESIGNATION,
+        employeeId: process.env.OTHER_FACULTY_EMPLOYEE_ID,
+      },
+    ];
+
+    for (const faculty of faculties) {
+      const exists = await User.findOne({
+        email: faculty.email,
+      });
+
+      if (!exists) {
+        await User.create({
+          name: faculty.name,
+          email: faculty.email,
+          password: faculty.password,
+          role: "faculty",
+          department: faculty.department,
+          designation: faculty.designation,
+          employeeId: faculty.employeeId,
+        });
+
+        console.log(`✅ Faculty Created : ${faculty.name}`);
+      }
+    }
+  } catch (err) {
+    console.log(err);
   }
 };
 // ------------------ Change Password ------------------
@@ -127,7 +231,9 @@ const changePassword = async (req, res) => {
 module.exports = {
   signup,
   studentLogin,
+  facultyLogin,
   adminLogin,
   createDefaultAdmin,
+  createDefaultFaculty,
   changePassword,
 };

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Mail, Phone, MapPin, Heart } from 'lucide-react';
+import logoUrl from '../assets/images/logo.png';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -10,22 +11,11 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <div
+              {/* <div
                 className="w-10 h-10 rounded-xl bg-linear-to-tr from-[#1760D7] to-[#06B6D4] flex items-center justify-center shadow-lg shadow-cyan-500/30 max-sm:w-9 max-sm:h-9"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="w-5 h-5 max-sm:w-4 max-sm:h-4"
-                >
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-              </div>
+              > */}
+                <img src={logoUrl} alt="Smart Complaint Logo" className="w-10 h-10" />
+              {/* </div> */}
               <div>
                 <h3 className="text-xl font-bold text-white">Smart Complaint</h3>
                 <p className="text-sm text-slate-400">Management System</p>
