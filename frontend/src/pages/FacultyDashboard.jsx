@@ -8,7 +8,27 @@ import {
     CheckCircle2,
     XCircle,
 } from "lucide-react";
-import { LayoutDashboard, FileText, Bell, LogOut, Search, Menu, X, AlertCircle, Clock, Loader2, Eye, Pencil, UserCircle2, BarChart3, User, ShieldCheck, FileBarChart, } from "lucide-react";
+import {
+    LayoutDashboard,
+    FileText,
+    Bell,
+    LogOut,
+    Search,
+    Menu,
+    X,
+    AlertCircle,
+    Clock,
+    Loader2,
+    Eye,
+    Pencil,
+    UserCircle2,
+    BarChart3,
+    User,
+    ShieldCheck,
+    FileBarChart,
+    ChevronLeft,
+    ChevronRight,
+} from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import config from "../config/config";
 
@@ -18,6 +38,7 @@ export default function FacultyDashboard() {
     const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [activeSection, setActiveSection] = useState("overview");
     const [complaints, setComplaints] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -70,15 +91,31 @@ export default function FacultyDashboard() {
         const socket = socketIO(`${config.BASE_URL.replace("/api", "")}`, { transports: ["websocket"] });
         socket.on("connect", () => socket.emit("join", user._id));
         socket.on("notification", (n) => setNotifications((prev) => [n, ...prev]));
-        socket.on("complaintChanged", ({ action, complaint }) => {
+        socket.on("complaintChanged", (payload) => {
+            const complaint = payload?.complaint || payload;
             if (!complaint) return;
+            const updatedComplaint = payload?.student
+                ? { ...complaint, studentId: payload.student }
+                : complaint;
             setComplaints((prev) => {
-                if (action === "deleted") {
-                    return prev.filter((item) => item._id !== complaint._id);
+                if (payload.action === "deleted") {
+                    return prev.filter((item) => item._id !== updatedComplaint._id);
                 }
-                const exists = prev.some((item) => item._id === complaint._id);
-                if (!exists) return [complaint, ...prev];
-                return prev.map((item) => (item._id === complaint._id ? complaint : item));
+                const exists = prev.some((item) => item._id === updatedComplaint._id);
+                if (!exists) return [updatedComplaint, ...prev];
+                return prev.map((item) => (item._id === updatedComplaint._id ? updatedComplaint : item));
+            });
+        });
+        socket.on("complaintAssigned", (payload) => {
+            const complaint = payload?.complaint || payload;
+            if (!complaint) return;
+            const updatedComplaint = payload?.student
+                ? { ...complaint, studentId: payload.student }
+                : complaint;
+            setComplaints((prev) => {
+                const exists = prev.some((item) => item._id === updatedComplaint._id);
+                if (exists) return prev.map((item) => (item._id === updatedComplaint._id ? updatedComplaint : item));
+                return [updatedComplaint, ...prev];
             });
         });
 
@@ -210,43 +247,168 @@ export default function FacultyDashboard() {
             alert(err.message);
         }
     };
+    // Faculty Performance 
+    const assignedCount = complaints.length;
 
+    const resolvedCount = complaints.filter(
+        (c) => c.status === "Resolved"
+    ).length;
+
+    const pendingCount = complaints.filter(
+        (c) => c.status === "Pending"
+    ).length;
+
+    const progressCount = complaints.filter(
+        (c) => c.status === "In Progress"
+    ).length;
+
+    //  Priority Report 
+    const highPriority = complaints.filter(
+        (c) => c.priority === "High"
+    ).length;
+
+    const mediumPriority = complaints.filter(
+        (c) => c.priority === "Medium"
+    ).length;
+
+    const lowPriority = complaints.filter(
+        (c) => c.priority === "Low"
+    ).length;
+
+    //Average Resolution Time
+    const resolvedComplaints = complaints.filter(
+        (c) =>
+            c.status === "Resolved" &&
+            c.createdAt &&
+            c.resolvedAt
+    );
+
+    const averageDays =
+        resolvedComplaints.length > 0
+            ? (
+                resolvedComplaints.reduce((sum, complaint) => {
+                    const created = new Date(complaint.createdAt);
+                    const resolved = new Date(complaint.resolvedAt);
+
+                    return (
+                        sum +
+                        (resolved - created) /
+                        (1000 * 60 * 60 * 24)
+                    );
+                }, 0) / resolvedComplaints.length
+            ).toFixed(1)
+            : 0;
+
+    // Fastest Resolution 
+    const fastestHours =
+        resolvedComplaints.length > 0
+            ? Math.min(
+                ...resolvedComplaints.map((complaint) => {
+                    const created = new Date(complaint.createdAt);
+                    const resolved = new Date(complaint.resolvedAt);
+
+                    return (
+                        (resolved - created) /
+                        (1000 * 60 * 60)
+                    );
+                })
+            ).toFixed(1)
+            : 0;
     return (
         <div className="min-h-screen bg-slate-950 text-white">
             <div className="flex">
-                <aside className={`fixed inset-y-0 left-0 z-30 w-72 bg-slate-900/95 border-r border-slate-800 p-4 transform transition ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 lg:static`}>
-                    <div className="flex items-center justify-between mb-8">
-                        <div>
-                            <h2 className="text-xl font-semibold">Faculty Panel</h2>
-                            <p className="text-sm text-slate-400">Assigned Complaints</p>
-                        </div>
-                        <button className="lg:hidden" onClick={() => setSidebarOpen(false)}><X size={20} /></button>
-                    </div>
-                    <div className="space-y-2">
-                        {sidebarItems.map(({ key, label, icon: Icon }) => (
-                            <button key={key} onClick={() => {
-                                setActiveSection(key);
-                                setSidebarOpen(false);
-                                setSelectedComplaint(null);
-                            }} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left ${activeSection === key ? "bg-cyan-600/20 text-cyan-300" : "text-slate-300 hover:bg-slate-800"}`}>
-                                <Icon size={18} /> {label}
-                            </button>
-                        ))}
-                        <button onClick={() => { sessionStorage.clear(); navigate("/login"); }} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-slate-300 hover:bg-slate-800 mt-6"><LogOut size={18} /> Logout</button>
-                    </div>
-                </aside>
+                <aside
+                    className={`fixed top-0 left-0 h-full bg-slate-900 border-r border-slate-800 z-40 transition-all duration-300 ${sidebarCollapsed ? "lg:w-20" : "lg:w-64"} ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
+                    {/* Desktop Arrow */}
+                    <button
+                        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                        className="hidden lg:flex absolute -right-5 top-15 w-8 h-8 rounded-full bg-cyan-500 items-center justify-center shadow-lg hover:scale-110transition z-50 "
+                    >
+                        {sidebarCollapsed ? (
+                            <ChevronRight className="w-5 h-5 text-white" />
+                        ) : (
+                            <ChevronLeft className="w-5 h-5 text-white" />
+                        )}
+                    </button>
 
-                <main className="flex-1 p-4 lg:p-8 sm:p-5 overflow-x-hidden">   
+                    <div className="p-4">
+
+                        <div className="flex justify-between items-center mb-8">
+
+                            {!sidebarCollapsed && (
+                                <div>
+                                    <h2 className="text-xl font-semibold">
+                                        Faculty Panel
+                                    </h2>
+
+                                    <p className="text-sm text-slate-400">
+                                        Assigned Complaints
+                                    </p>
+                                </div>
+                            )}
+
+                            <button
+                                className="lg:hidden"
+                                onClick={() => setSidebarOpen(false)}
+                            >
+                                <X size={20} />
+                            </button>
+
+                        </div>
+
+                        <div className="space-y-2">
+
+                            {sidebarItems.map(({ key, label, icon: Icon }) => (
+
+                                <button
+                                    key={key}
+                                    onClick={() => {
+                                        setActiveSection(key);
+                                        setSidebarOpen(false);
+                                        setSelectedComplaint(null);
+                                    }}
+                                    className={`w-full flex items-center ${sidebarCollapsed ? "justify-center" : "gap-3"} px-3 py-3 rounded-xl transition ${activeSection === key ? "bg-cyan-600/20 text-cyan-300" : "hover:bg-slate-800 text-slate-300"}`}>
+                                    <Icon size={20} />
+                                    {!sidebarCollapsed && <span>{label}</span>}
+
+                                </button>
+
+                            ))}
+
+                            <button
+                                onClick={() => {
+                                    sessionStorage.clear();
+                                    navigate("/login");
+                                }}
+                                className="w-full flex items-center mt-6 px-3 py-3 rounded-xl hover:bg-slate-800 text-slate-300 transition justify-center lg:justify-start">
+
+                                <LogOut size={20} />
+
+                                {!sidebarCollapsed && (
+                                    <span className="ml-3">
+                                        Logout
+                                    </span>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+
+                </aside>
+                {sidebarOpen && (
+                    <div
+                        className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+                        onClick={() => setSidebarOpen(false)}
+                    />
+                )}
+                <main
+                    className={`flex-1 overflow-x-hidden p-4 lg:p-8 transition-all duration-300 ${sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"}`}>
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                         <div className="flex items-center gap-3">
                             <button className="lg:hidden" onClick={() => setSidebarOpen(true)}><Menu size={20} /></button>
                             <div>
-
                                 <h2 className="text-2xl sm:text-3xl font-bold">
                                     Welcome Back, {faculty.name}
                                 </h2>
-
-
                                 <p className="text-gray-500 text-sm sm:text-base">
                                     {faculty.department}
                                 </p>
@@ -338,7 +500,7 @@ export default function FacultyDashboard() {
                                                     <tr key={complaint._id} className="border-t border-slate-800">
                                                         <td className="px-3 py-3">{complaint.complaintId}</td>
                                                         <td className="px-3 py-3">{complaint.studentId?.name || "Student"}</td>
-                                                        <td className="px-3 py-3">{complaint.category}</td>
+                                                        <td className="px-3 py-3 bg-">{complaint.category}</td>
                                                         <td className="px-3 py-3">{complaint.priority}</td>
                                                         <td className="px-3 py-3">{complaint.status}</td>
                                                         <td className="px-3 py-3"><button onClick={() => openComplaint(complaint)} className="rounded-lg bg-cyan-600 px-3 py-1.5 text-sm">View</button></td>
@@ -411,6 +573,37 @@ export default function FacultyDashboard() {
                     {activeSection === "history" && (
                         <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
                             <h2 className="mb-4 text-lg font-semibold">Resolved Complaints History</h2>
+                            <div className="grid md:grid-cols-3 gap-4 mb-6">
+                                <div className="bg-slate-950 border border-slate-800 rounded-xl p-5">
+                                    <p className="text-slate-400 text-sm">
+                                        Total Resolved
+                                    </p>
+
+                                    <h2 className="text-3xl font-bold text-green-400 mt-2">
+                                        {resolvedCount}
+                                    </h2>
+                                </div>
+
+                                <div className="bg-slate-950 border border-slate-800 rounded-xl p-5">
+                                    <p className="text-slate-400 text-sm">
+                                        Average Resolution
+                                    </p>
+
+                                    <h2 className="text-3xl font-bold text-cyan-400 mt-2">
+                                        {averageDays} Days
+                                    </h2>
+                                </div>
+
+                                <div className="bg-slate-950 border border-slate-800 rounded-xl p-5">
+                                    <p className="text-slate-400 text-sm">
+                                        Fastest Resolution
+                                    </p>
+
+                                    <h2 className="text-3xl font-bold text-yellow-400 mt-2">
+                                        {fastestHours} Hours
+                                    </h2>
+                                </div>
+                            </div>
                             <div className="overflow-x-auto">
                                 <table className="min-w-full text-sm">
                                     <thead className="text-left text-slate-400">
@@ -465,6 +658,94 @@ export default function FacultyDashboard() {
                                         </div>
                                     ))}
                                 </div>
+                            </div>
+                            <div className="grid md:grid-cols-2 gap-6 mt-6">
+
+                                {/* Faculty Performance */}
+
+                                <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-5">
+                                    <h2 className="text-lg font-semibold mb-5">
+                                        Faculty Performance
+                                    </h2>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-slate-950 rounded-xl p-4 border border-slate-800">
+                                            <p className="text-slate-400 text-sm">
+                                                Assigned
+                                            </p>
+                                            <h2 className="text-3xl font-bold text-cyan-400">
+                                                {assignedCount}
+                                            </h2>
+                                        </div>
+
+                                        <div className="bg-slate-950 rounded-xl p-4 border border-slate-800">
+                                            <p className="text-slate-400 text-sm">
+                                                Resolved
+                                            </p>
+
+                                            <h2 className="text-3xl font-bold text-green-400">
+                                                {resolvedCount}
+                                            </h2>
+                                        </div>
+
+                                        <div className="bg-slate-950 rounded-xl p-4 border border-slate-800">
+                                            <p className="text-slate-400 text-sm">
+                                                Pending
+                                            </p>
+
+                                            <h2 className="text-3xl font-bold text-yellow-400">
+                                                {pendingCount}
+                                            </h2>
+                                        </div>
+
+                                        <div className="bg-slate-950 rounded-xl p-4 border border-slate-800">
+                                            <p className="text-slate-400 text-sm">
+                                                In Progress
+                                            </p>
+
+                                            <h2 className="text-3xl font-bold text-blue-400">
+                                                {progressCount}
+                                            </h2>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                                {/* Priority Report */}
+
+                                <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-5">
+
+                                    <h2 className="text-lg font-semibold mb-5">
+                                        Priority Handling
+                                    </h2>
+
+                                    <div className="space-y-4">
+
+                                        <div className="flex justify-between border-b border-slate-800 pb-3">
+                                            <span>High Priority</span>
+                                            <span className="text-red-400 font-bold">
+                                                {highPriority}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex justify-between border-b border-slate-800 pb-3">
+                                            <span>Medium Priority</span>
+                                            <span className="text-yellow-400 font-bold">
+                                                {mediumPriority}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex justify-between">
+                                            <span>Low Priority</span>
+                                            <span className="text-green-400 font-bold">
+                                                {lowPriority}
+                                            </span>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
                             </div>
                         </div>
                     )}

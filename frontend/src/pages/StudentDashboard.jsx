@@ -459,15 +459,17 @@ export default function StudentDashboard() {
       return;
     }
 
-    if (!title.trim() || !category || !description.trim()) {
-      setErrorMessage("Please fill title, category, and description");
+    if (!title.trim() || !description.trim()) {
+      setErrorMessage("Please fill title and description.");
       setSubmitting(false);
       return;
     }
 
     const formData = new FormData();
     formData.append("title", title);
-    formData.append("category", category);
+    if (category) {
+      formData.append("category", category);
+    }
     formData.append("description", description);
     formData.append("priority", priority);
     files.forEach((file) => formData.append("files", file));
@@ -574,8 +576,17 @@ export default function StudentDashboard() {
     e.preventDefault();
     if (!editingComplaint) return;
 
+    setSubmitting(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+
     try {
-      const res = await fetch(`${config.BASE_URL}/api/complaints/${editingComplaint._id || editingComplaint.id}`, {
+      const complaintId = editingComplaint._id || editingComplaint.id;
+      if (!complaintId) {
+        throw new Error("Unable to update complaint: missing complaint identifier.");
+      }
+
+      const res = await fetch(`${config.BASE_URL}/api/complaints/${complaintId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -587,16 +598,21 @@ export default function StudentDashboard() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to update complaint");
 
+      const updatedComplaint = data.complaint || { ...editingComplaint, ...editForm };
+      const updatedComplaintId = String(updatedComplaint._id || updatedComplaint.id);
+
       setMyComplaints((prev) =>
-        prev.map((c) =>
-          (c._id || c.id) === (editingComplaint._id || editingComplaint.id)
-            ? { ...c, ...editForm }
-            : c,
-        ),
+        prev.map((c) => {
+          const complaintId = String(c._id || c.id);
+          return complaintId === updatedComplaintId ? { ...c, ...updatedComplaint } : c;
+        }),
       );
 
-      if (selectedComplaint && (selectedComplaint._id || selectedComplaint.id) === (editingComplaint._id || editingComplaint.id)) {
-        setSelectedComplaint((prev) => prev ? { ...prev, ...editForm } : prev);
+      if (selectedComplaint) {
+        const selectedComplaintId = String(selectedComplaint._id || selectedComplaint.id);
+        if (selectedComplaintId === updatedComplaintId) {
+          setSelectedComplaint((prev) => (prev ? { ...prev, ...updatedComplaint } : prev));
+        }
       }
 
       setEditingComplaint(null);
@@ -604,6 +620,8 @@ export default function StudentDashboard() {
       setTimeout(() => setSuccessMessage(""), 2500);
     } catch (err) {
       setErrorMessage(err.message || "Could not update complaint");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -1950,7 +1968,7 @@ export default function StudentDashboard() {
                           value={editForm.category}
                           onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
                           className="w-full rounded-xl border border-gray-700 bg-[#0f172a] px-4 py-2 text-white"
-                          required
+                          
                         >
                           <option value="">Select category</option>
                           <option>Hostel</option>
@@ -2506,19 +2524,17 @@ export default function StudentDashboard() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-300 mb-1">
-                  Category *
+                  Category (optional suggestion)
                 </label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   className="w-full p-2 bg-gray-900 border border-gray-700 rounded text-white text-xs"
-                  required
                 >
-                  <option value="">Select</option>
+                  <option value="">Optional — AI will detect category</option>
                   <option value="Hostel">Hostel</option>
                   <option value="Academics">Academics</option>
                   <option value="Mess">Mess</option>
-                  {/* <option value="Wi-Fi">Wi-Fi</option> */}
                   <option value="IT">IT / Technical</option>
                   <option value="Library">Library</option>
                   <option value="Transport">Transport</option>

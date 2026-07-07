@@ -4,15 +4,14 @@ const connectDB = require("./config/db");
 const path = require("path");
 const http = require("http");
 const { setIO } = require("./utils/socket");
+const aiRoutes = require("./routes/aiRoutes");
 
 require("dotenv").config();
 connectDB();
 const { createDefaultAdmin, createDefaultFaculty } = require("./controllers/authController");
 createDefaultAdmin();
 createDefaultFaculty();
-
 const app = express();
-
 app.use(
   cors({
     origin: "*",
@@ -28,6 +27,8 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/complaints", require("./routes/complaintRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
+app.use("/api/ai", aiRoutes);
+console.log("Server Key:", process.env.GEMINI_API_KEY);
 
 
 const server = http.createServer(app);
@@ -61,3 +62,5 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+

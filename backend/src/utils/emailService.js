@@ -220,4 +220,81 @@ async function sendStatusUpdateEmail(
     return { success: false, error };
   }
 }
-module.exports = { sendWelcomeEmail, sendStatusUpdateEmail };
+
+async function sendAssignmentEmail(
+  facultyName,
+  facultyEmail,
+  complaintId,
+  complaintTitle,
+  complaintCategory,
+  studentName,
+  studentPrn,
+  frontendUrl,
+) {
+  try {
+    if (!transporter) {
+      throw new Error("Email transporter not initialized");
+    }
+
+    if (!facultyEmail) {
+      throw new Error("No faculty email provided");
+    }
+
+    const siteUrl =
+      frontendUrl || process.env.FRONTEND_URL || "http://localhost:5173";
+
+    const mailOptions = {
+      from:
+        process.env.EMAIL_FROM ||
+        process.env.EMAIL_USER ||
+        "no-reply@smartcomplaint.example.com",
+      to: facultyEmail,
+      subject: `Complaint Assigned - ${complaintId}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+          <h2 style="color: #2c3e50; text-align: center;">New Complaint Assigned</h2>
+
+          <p>Dear <strong>${facultyName}</strong>,</p>
+
+          <p>A new complaint has been assigned to you. Details are below:</p>
+
+          <div style="background:#f8fafc; padding:15px; border-radius:6px; margin:20px 0;">
+            <p><strong>Complaint ID:</strong> ${complaintId}</p>
+            <p><strong>Problem:</strong> ${complaintTitle}</p>
+            <p><strong>Category:</strong> ${complaintCategory}</p>
+            ${studentName ? `<p><strong>Student:</strong> ${studentName}</p>` : ""}
+            ${studentPrn ? `<p><strong>PRN:</strong> ${studentPrn}</p>` : ""}
+          </div>
+
+          <p>Please log in to your dashboard to review and take the next action.</p>
+
+          <p style="margin-top: 16px;">
+            <a href="${siteUrl}" 
+               style="background:#0ea5e9;color:white;padding:10px 15px;border-radius:5px;text-decoration:none;">
+               Open Dashboard
+            </a>
+          </p>
+
+          <p style="margin-top:20px;">
+            Best regards,<br/>
+            <strong>Smart Complaint Management System</strong>
+          </p>
+
+          <hr/>
+          <p style="font-size:12px;color:#999;text-align:center;">
+            This is an automated email. Please do not reply.
+          </p>
+        </div>
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("✅ Assignment email sent:", info.response);
+
+    return { success: true };
+  } catch (error) {
+    console.error("❌ Assignment email error:", error);
+    return { success: false, error };
+  }
+}
+module.exports = { sendWelcomeEmail, sendStatusUpdateEmail, sendAssignmentEmail };
